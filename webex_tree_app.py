@@ -8,7 +8,7 @@ from matplotlib.patches import PathPatch
 import numpy as np
 
 st.set_page_config(layout="centered")
-st.title("🌳 Webex Tree of Releases (Enhanced Design)")
+st.title("🌳 Webex Tree of Releases (Enhanced with Visible Leaf Shapes)")
 
 # ✅ Load your Excel dataset directly (must be in same GitHub repo)
 df = pd.read_excel("webex_chunk_5.xlsx")
@@ -84,18 +84,18 @@ for v in versions:
     # Version label
     ax.text(x_end + 0.5 * v["dir"], y + 1.3, f"v{v['ver']}", fontsize=12, ha='left' if v["dir"] > 0 else 'right')
 
-    # Custom leaf shapes (polygon leaf)
-    leaf_colors = ([("green", v["pos"]), ("orange", v["neu"]), ("red", v["neg"])])
+    # Custom leaf shapes (visible diamond-shaped polygon leaves)
+    leaf_colors = [("green", v["pos"]), ("orange", v["neu"]), ("red", v["neg"])]
     for color, count in leaf_colors:
         for _ in range(count):
             leaf_x = x_end + np.random.uniform(-0.8, 0.8)
             leaf_y = y + 1.2 + np.random.uniform(-0.6, 0.6)
             leaf = Polygon([
                 (leaf_x, leaf_y),
-                (leaf_x + 0.15, leaf_y + 0.3),
+                (leaf_x + 0.2, leaf_y + 0.3),
                 (leaf_x, leaf_y + 0.6),
-                (leaf_x - 0.15, leaf_y + 0.3)
-            ], closed=True, color=color, ec='black', lw=0.5)
+                (leaf_x - 0.2, leaf_y + 0.3)
+            ], closed=True, facecolor=color, edgecolor='black', lw=1, zorder=10)
             ax.add_patch(leaf)
 
     # Blossoms or wilts
@@ -120,4 +120,4 @@ ax.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.0
 
 # Show the tree
 st.pyplot(fig)
-st.caption("This enhanced tree design uses curved branches, leaf shapes, background color, and texture to bring the Webex review timeline to life.")
+st.caption("Now featuring clear and visible diamond-shaped leaves. Each leaf reflects real user sentiment — making the tree more alive and expressive.")
