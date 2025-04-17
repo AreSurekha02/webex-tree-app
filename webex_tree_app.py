@@ -8,7 +8,7 @@ from matplotlib.patches import PathPatch
 import numpy as np
 
 st.set_page_config(layout="centered")
-st.title("🌳 Webex Tree of Releases (Enhanced with Visible Leaf Shapes)")
+st.title("🌳 Webex visualization")
 
 # ✅ Load your Excel dataset directly (must be in same GitHub repo)
 df = pd.read_excel("webex_chunk_5.xlsx")
@@ -16,7 +16,7 @@ df = pd.read_excel("webex_chunk_5.xlsx")
 # 🧠 Classify sentiment based on content and score
 def classify_sentiment(text, score):
     text = str(text).lower()
-    if any(word in text for word in ["excellent", "great", "love", "amazing", "good", "nice", "useful"]) or score >= 4:
+    if any(word in text for word in ["excellent", "great", "love", "amazing", "good", "nice", "useful",]) or score >= 4:
         return "Positive"
     elif any(word in text for word in ["bad", "issue", "bug", "terrible", "worst", "poor"]) or score <= 2:
         return "Negative"
@@ -120,4 +120,3 @@ ax.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.0
 
 # Show the tree
 st.pyplot(fig)
-st.caption("Now featuring clear and visible diamond-shaped leaves. Each leaf reflects real user sentiment — making the tree more alive and expressive.")
