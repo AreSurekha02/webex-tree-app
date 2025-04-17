@@ -1,12 +1,14 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon, FancyBboxPatch
 from matplotlib.lines import Line2D
+from matplotlib.path import Path
+from matplotlib.patches import PathPatch
 import numpy as np
 
 st.set_page_config(layout="centered")
-st.title("🌳 Webex Tree of Releases (Real Data with Leaf Shapes)")
+st.title("🌳 Webex Tree of Releases (Enhanced Design)")
 
 # ✅ Load your Excel dataset directly (must be in same GitHub repo)
 df = pd.read_excel("webex_chunk_5.xlsx")
@@ -47,35 +49,52 @@ for _, row in sentiment_counts.iterrows():
     direction *= -1
 
 # 🎨 Begin drawing the tree
-fig, ax = plt.subplots(figsize=(10, y_position + 3))
-ax.set_xlim(-7, 7)
+fig, ax = plt.subplots(figsize=(12, y_position + 3))
+fig.patch.set_facecolor('#e8f5e9')  # light green background
+ax.set_xlim(-8, 8)
 ax.set_ylim(0, y_position + 3)
 ax.axis("off")
 
-# Draw trunk
-trunk_base = [[-0.6, 0], [0.6, 0], [0.3, y_position + 1], [-0.3, y_position + 1]]
-trunk = Polygon(trunk_base, closed=True, color='saddlebrown')
+# Draw textured trunk using rounded box
+trunk = FancyBboxPatch(
+    (-0.6, 0), 1.2, y_position + 1,
+    boxstyle="round,pad=0.02",
+    ec="saddlebrown", fc="saddlebrown", linewidth=3
+)
 ax.add_patch(trunk)
 
-# Draw branches and leaves
+# Draw curved branches and leaves
 for v in versions:
     y = v["y"]
     x_end = v["dir"] * 4.5
-    ax.plot([0, x_end * 0.7, x_end], [y, y + 0.8, y + 1.2], color="sienna", linewidth=4)
+    ctrl_x = v["dir"] * 2.5
+    ctrl_y = y + 1.5
+
+    # Curved branch using Bezier path
+    path_data = [
+        (Path.MOVETO, (0, y)),
+        (Path.CURVE3, (ctrl_x, ctrl_y)),
+        (Path.CURVE3, (x_end, y + 1.2))
+    ]
+    codes, verts = zip(*path_data)
+    path = Path(verts, codes)
+    patch = PathPatch(path, facecolor='none', edgecolor='sienna', lw=4)
+    ax.add_patch(patch)
+
+    # Version label
     ax.text(x_end + 0.5 * v["dir"], y + 1.3, f"v{v['ver']}", fontsize=12, ha='left' if v["dir"] > 0 else 'right')
 
-    # Custom leaf shapes
+    # Custom leaf shapes (polygon leaf)
     leaf_colors = ([("green", v["pos"]), ("orange", v["neu"]), ("red", v["neg"])])
     for color, count in leaf_colors:
         for _ in range(count):
             leaf_x = x_end + np.random.uniform(-0.8, 0.8)
             leaf_y = y + 1.2 + np.random.uniform(-0.6, 0.6)
-            # Leaf shape (polygon-style oval leaf)
             leaf = Polygon([
                 (leaf_x, leaf_y),
-                (leaf_x + 0.1, leaf_y + 0.2),
-                (leaf_x, leaf_y + 0.4),
-                (leaf_x - 0.1, leaf_y + 0.2)
+                (leaf_x + 0.15, leaf_y + 0.3),
+                (leaf_x, leaf_y + 0.6),
+                (leaf_x - 0.15, leaf_y + 0.3)
             ], closed=True, color=color, ec='black', lw=0.5)
             ax.add_patch(leaf)
 
@@ -85,7 +104,7 @@ for v in versions:
     elif v["highlight"] == "negative":
         ax.scatter(x_end, y + 2, s=150, color="brown", marker="x")
 
-# Timeline markers (optional)
+# Timeline markers
 for label, ypos in zip(["Jan 2022", "Jul 2022", "Jan 2023", "Jul 2023", "Jan 2024"], range(2, int(y_position + 1), 2)):
     ax.text(0, ypos, label, fontsize=10, ha='center', va='bottom', color='gray')
 
@@ -99,6 +118,6 @@ legend_elements = [
 ]
 ax.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.05), ncol=2)
 
-# Show it!
+# Show the tree
 st.pyplot(fig)
-st.caption("This tree is built from your actual Webex review data. Branches = versions, Leaves = polygonal leaf shapes (colored by sentiment), and blossoms/wilts show overall version impact.")
+st.caption("This enhanced tree design uses curved branches, leaf shapes, background color, and texture to bring the Webex review timeline to life.")
