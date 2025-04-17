@@ -1,4 +1,4 @@
-import streamlit as st
+vimport streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, FancyBboxPatch, Circle
