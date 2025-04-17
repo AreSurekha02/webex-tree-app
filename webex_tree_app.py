@@ -106,7 +106,7 @@ for v in versions:
 
 # Timeline markers
 for label, ypos in zip(["Jan 2022", "Jul 2022", "Jan 2023", "Jul 2023", "Jan 2024"], range(2, int(y_position + 1), 2)):
-    ax.text(0, ypos, label, fontsize=10, ha='center', va='bottom', color='gray')
+    ax.text(0, ypos, label, fontsize=10, ha='center', va='bottom', color='black')
 
 # Legend
 legend_elements = [
