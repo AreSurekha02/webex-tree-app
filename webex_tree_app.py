@@ -1,38 +1,67 @@
 import streamlit as st
+import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Polygon
+from matplotlib.lines import Line2D
 import numpy as np
 
 st.set_page_config(layout="centered")
-st.title("🌳 Webex Tree of Releases (Realistic Tree Style)")
+st.title("🌳 Webex Tree of Releases (Real Data)")
 
-# Tree data
-versions = [
-    {"ver": "42.0", "y": 2.5, "dir": -1, "pos": 4, "neu": 1, "neg": 1, "highlight": "positive"},
-    {"ver": "42.5", "y": 4.5, "dir": 1, "pos": 3, "neu": 2, "neg": 4, "highlight": "mixed"},
-    {"ver": "43.0", "y": 6.5, "dir": -1, "pos": 2, "neu": 1, "neg": 0, "highlight": None},
-    {"ver": "43.6", "y": 8.5, "dir": 1, "pos": 0, "neu": 2, "neg": 5, "highlight": "negative"},
-    {"ver": "44.0", "y": 10.5, "dir": -1, "pos": 6, "neu": 1, "neg": 0, "highlight": "positive"}
-]
+# ✅ Load your Excel dataset directly (must be in same GitHub repo)
+df = pd.read_excel("Webex_Traceability_Merged_Cleaned.xlsx")
 
-fig, ax = plt.subplots(figsize=(10, 13))
+# 🧠 Classify sentiment based on content and score
+def classify_sentiment(text, score):
+    text = str(text).lower()
+    if any(word in text for word in ["excellent", "great", "love", "amazing", "good", "nice", "useful"]) or score >= 4:
+        return "Positive"
+    elif any(word in text for word in ["bad", "issue", "bug", "terrible", "worst", "poor"]) or score <= 2:
+        return "Negative"
+    else:
+        return "Neutral"
+
+df['Sentiment'] = df.apply(lambda row: classify_sentiment(row['content'], row['score']), axis=1)
+
+# 📊 Group sentiment counts per version
+sentiment_counts = df.groupby(['Release Version', 'Sentiment']).size().unstack(fill_value=0).reset_index()
+
+# 📦 Convert to tree data
+versions = []
+y_position = 2.5
+direction = -1
+
+for _, row in sentiment_counts.iterrows():
+    versions.append({
+        "ver": row['Release Version'],
+        "y": y_position,
+        "dir": direction,
+        "pos": row.get('Positive', 0),
+        "neu": row.get('Neutral', 0),
+        "neg": row.get('Negative', 0),
+        "highlight": "positive" if row.get('Positive', 0) > (row.get('Negative', 0) + row.get('Neutral', 0))
+                     else "negative" if row.get('Negative', 0) > (row.get('Positive', 0) + row.get('Neutral', 0))
+                     else None
+    })
+    y_position += 2
+    direction *= -1
+
+# 🎨 Begin drawing the tree
+fig, ax = plt.subplots(figsize=(10, y_position + 3))
 ax.set_xlim(-7, 7)
-ax.set_ylim(0, 14)
+ax.set_ylim(0, y_position + 3)
 ax.axis("off")
 
-# Draw tree trunk (tapered)
-trunk_base = [[-0.6, 0], [0.6, 0], [0.3, 12], [-0.3, 12]]
+# Draw trunk
+trunk_base = [[-0.6, 0], [0.6, 0], [0.3, y_position + 1], [-0.3, y_position + 1]]
 trunk = Polygon(trunk_base, closed=True, color='saddlebrown')
 ax.add_patch(trunk)
 
-# Draw branches, leaves, blossoms/wilts
+# Draw branches and leaves
 for v in versions:
     y = v["y"]
     x_end = v["dir"] * 4.5
-    angle = 25 if v["dir"] > 0 else -25
-    branch_x = [0, x_end * 0.7, x_end]
-    branch_y = [y, y + 0.8, y + 1.2]
-    ax.plot(branch_x, branch_y, color="sienna", linewidth=4)
+    ax.plot([0, x_end * 0.7, x_end], [y, y + 0.8, y + 1.2], color="sienna", linewidth=4)
     ax.text(x_end + 0.5 * v["dir"], y + 1.3, f"v{v['ver']}", fontsize=12, ha='left' if v["dir"] > 0 else 'right')
 
     # Leaves
@@ -42,27 +71,26 @@ for v in versions:
         leaf_y = y + 1.2 + np.random.uniform(-0.6, 0.6)
         ax.add_patch(Circle((leaf_x, leaf_y), 0.25, color=color, ec='black', lw=0.5))
 
-    # Blossoms or wilted flowers
+    # Blossoms or wilts
     if v["highlight"] == "positive":
         ax.scatter(x_end, y + 2, s=300, color="pink", edgecolors="deeppink", marker="*")
     elif v["highlight"] == "negative":
         ax.scatter(x_end, y + 2, s=150, color="brown", marker="x")
 
-# Timeline
-for label, ypos in zip(["Jan 2022", "Jul 2022", "Jan 2023", "Jul 2023", "Jan 2024"], [2, 4, 6, 8, 10]):
+# Timeline markers (optional)
+for label, ypos in zip(["Jan 2022", "Jul 2022", "Jan 2023", "Jul 2023", "Jan 2024"], range(2, int(y_position + 1), 2)):
     ax.text(0, ypos, label, fontsize=10, ha='center', va='bottom', color='gray')
 
 # Legend
-from matplotlib.lines import Line2D
 legend_elements = [
     Line2D([0], [0], marker='o', color='w', label='Positive Review', markerfacecolor='green', markersize=10),
     Line2D([0], [0], marker='o', color='w', label='Neutral Review', markerfacecolor='orange', markersize=10),
     Line2D([0], [0], marker='o', color='w', label='Negative Review', markerfacecolor='red', markersize=10),
     Line2D([0], [0], marker='*', color='pink', label='🌸 Blossom (High Praise)', markerfacecolor='pink', markersize=15),
-    Line2D([0], [0], marker='x', color='brown', label='🪰 Wilted (High Criticism)', markersize=10)
+    Line2D([0], [0], marker='x', color='brown', label='🥀 Wilted (High Criticism)', markersize=10)
 ]
 ax.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.05), ncol=2)
 
+# Show it!
 st.pyplot(fig)
-
-st.caption("This tree shows Webex versions growing like real branches — with leaves as user reviews (green = positive, red = negative, orange = neutral), and blossoms/wilts based on majority sentiment.")
+st.caption("This tree is built from your actual Webex review data. Branches = versions, Leaves = reviews (colored by sentiment), and blossoms/wilts show overall version impact.")
