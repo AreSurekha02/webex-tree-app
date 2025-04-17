@@ -81,10 +81,10 @@ for v in versions:
     patch = PathPatch(path, facecolor='none', edgecolor='sienna', lw=4)
     ax.add_patch(patch)
 
-    # Version label
-    ax.text(x_end + 0.5 * v["dir"], y + 1.3, f"v{v['ver']}", fontsize=12, ha='left' if v["dir"] > 0 else 'right')
+    # Version label (bold, larger, higher, clearer)
+    ax.text(x_end + 0.5 * v["dir"], y + 1.6, f"v{v['ver']}", fontsize=14, fontweight='bold', color='darkgreen', ha='left' if v["dir"] > 0 else 'right')
 
-    # Custom leaf shapes (visible diamond-shaped polygon leaves)
+    # Custom leaf shapes
     leaf_colors = [("green", v["pos"]), ("orange", v["neu"]), ("red", v["neg"])]
     for color, count in leaf_colors:
         for _ in range(count):
