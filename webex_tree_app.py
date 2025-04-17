@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle, Polygon
+from matplotlib.patches import Polygon
 from matplotlib.lines import Line2D
 import numpy as np
 
 st.set_page_config(layout="centered")
-st.title("🌳 Webex Tree of Releases (Real Data)")
+st.title("🌳 Webex Tree of Releases (Real Data with Leaf Shapes)")
 
 # ✅ Load your Excel dataset directly (must be in same GitHub repo)
 df = pd.read_excel("webex_chunk_5.xlsx")
@@ -64,12 +64,20 @@ for v in versions:
     ax.plot([0, x_end * 0.7, x_end], [y, y + 0.8, y + 1.2], color="sienna", linewidth=4)
     ax.text(x_end + 0.5 * v["dir"], y + 1.3, f"v{v['ver']}", fontsize=12, ha='left' if v["dir"] > 0 else 'right')
 
-    # Leaves
-    leaf_colors = (["green"] * v["pos"]) + (["orange"] * v["neu"]) + (["red"] * v["neg"])
-    for color in leaf_colors:
-        leaf_x = x_end + np.random.uniform(-0.8, 0.8)
-        leaf_y = y + 1.2 + np.random.uniform(-0.6, 0.6)
-        ax.add_patch(Circle((leaf_x, leaf_y), 0.25, color=color, ec='black', lw=0.5))
+    # Custom leaf shapes
+    leaf_colors = ([("green", v["pos"]), ("orange", v["neu"]), ("red", v["neg"])])
+    for color, count in leaf_colors:
+        for _ in range(count):
+            leaf_x = x_end + np.random.uniform(-0.8, 0.8)
+            leaf_y = y + 1.2 + np.random.uniform(-0.6, 0.6)
+            # Leaf shape (polygon-style oval leaf)
+            leaf = Polygon([
+                (leaf_x, leaf_y),
+                (leaf_x + 0.1, leaf_y + 0.2),
+                (leaf_x, leaf_y + 0.4),
+                (leaf_x - 0.1, leaf_y + 0.2)
+            ], closed=True, color=color, ec='black', lw=0.5)
+            ax.add_patch(leaf)
 
     # Blossoms or wilts
     if v["highlight"] == "positive":
@@ -93,4 +101,4 @@ ax.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.0
 
 # Show it!
 st.pyplot(fig)
-st.caption("This tree is built from your actual Webex review data. Branches = versions, Leaves = reviews (colored by sentiment), and blossoms/wilts show overall version impact.")
+st.caption("This tree is built from your actual Webex review data. Branches = versions, Leaves = polygonal leaf shapes (colored by sentiment), and blossoms/wilts show overall version impact.")
